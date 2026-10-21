@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+.ipynb_checkpoints/
+# data and run outputs (never commit raw data or trained binaries)
+data/*
+!data/README.md
+outputs/
+*.joblib
+*.pt
