@@ -60,3 +60,36 @@ def test_dataset_shapes_targets_and_mirror_identity(ds, cfg):
 
 def test_depth_normalised_none_passthrough():
     assert depth_normalised(None) is None
+
+
+# ---- real Monash/TreeID naming and formats -------------------------------------------------------------------------------------------
+def test_classify_real_filenames(tmp_path):
+    """R01N01_Summer_{RGB,D,GT}-h-m-s.png -> roles by filename, season from the FILENAME (not the folder name)."""
+    from treeskel.data import classify_png
+    folder = tmp_path / "Dataset (With Summer GT)"
+    got = {k: classify_png(folder / f"R01N01_{s}_{k}-12-40-50.png", tmp_path) for k, s in
+           [("RGB", "Summer"), ("D", "Summer"), ("GT", "Summer")]}
+    assert got["RGB"][0] == "rgb" and got["D"][0] == "depth" and got["GT"][0] == "skeleton"
+    assert len({v[1] for v in got.values()}) == 1                       # same pairing key
+    assert classify_png(folder / "R01N01_Winter_RGB-11-23-49.png", tmp_path)[3] == "winter"
+
+
+def test_square_gt_is_centre_crop_and_8bit_depth_inverted(tmp_path):
+    """A 256x256 GT for a 480x640 image is the centre-square crop; 8-bit depth: 0 = missing, bright = near."""
+    import cv2, numpy as np
+    from treeskel.config import get_config
+    from treeskel.data import load_sample
+    H, W = 48, 64
+    rgb = np.full((H, W, 3), 120, np.uint8)
+    d = np.zeros((H, W, 3), np.uint8); d[:, :, :] = 200; d[:, 30:34] = 0           # a hole inside the centre-square crop (cols 8..55)
+    gt = np.zeros((32, 32), np.uint8); gt[:, 16] = 255                 # vertical line in the middle of the crop
+    for n, a in [("a_rgb", rgb), ("a_d", d), ("a_gt", gt)]:
+        cv2.imwrite(str(tmp_path / f"{n}.png"), a)
+    rec = dict(rgb=tmp_path / "a_rgb.png", depth=tmp_path / "a_d.png", skel=tmp_path / "a_gt.png")
+    cfg = get_config(DEPTH_8BIT_INVERTED=True)
+    with pytest.warns(UserWarning):
+        s = load_sample(rec, 32, cfg)
+    cols = np.where(s["mask"].any(axis=0))[0]
+    assert cols.min() >= 14 and cols.max() <= 18                        # line stays centred (not stretched to full width)
+    assert np.isnan(s["depth"]).any()                                     # zero reading -> missing (NaN)
+    assert np.nanmean(s["depth"]) < 0.5 * cfg["DEPTH_MAX_M"]            # bright 200/255 = near

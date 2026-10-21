@@ -10,3 +10,10 @@ Raw images are **not** committed. Obtain the dataset and either let the code dow
   use `--skeleton-variant whole` (or `visible`) if several annotation images exist per tree.
 * **Seasons** are read from `summer` / `autumn` / `winter` in the path; images without it are treated as `unknown`.
 * Respect the dataset licence – do not push images to GitHub.
+
+## Notes on the Monash TreeID folder layout (checked on real files)
+- Files are named `R{row}{N|U}{tree}_{Summer|Winter}_{RGB|D|GT}-{h}-{m}-{s}.png`; the loader pairs them by that stem.
+- RGB is 480x640x3; depth is an **8-bit** 3-channel PNG (0 = no reading, brighter = nearer, metric scale not stored, so 3D lengths are approximate); GT is a **256x256** binary skeleton of the **centre-square crop** of the image.
+- GT exists only for Summer `N` trees; Winter and `U` trees have none (usable for inference only).
+- Use `--group-regex '(r\d+n\d+)'` so frames of one tree never straddle train/val/test.
+- Example: `treeskel-train --data-mode local --local-path <TreeID folder> --group-regex '(r\d+n\d+)'`

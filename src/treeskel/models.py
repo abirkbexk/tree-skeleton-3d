@@ -51,13 +51,14 @@ def build_specs(cfg, n_train, n_features):
     """Model zoo: {name: (pipeline, hyper-parameter grid)}. Grids shrink when ``cfg['QUICK_TEST']``."""
     n_pf, n_pt = pca_sizes(cfg, n_train, n_features); seed = cfg["SEED"]; quick = cfg["QUICK_TEST"]
     mk = lambda reg, std=False: make_pipeline(reg, n_pf, n_pt, std, seed)
+    # MLP early stopping holds out an internal validation split, which needs enough samples (n_train >= 100)
     return {
         "Ridge": (mk(Ridge()), {"reg__regressor__alpha": [1, 10, 100, 1e3, 1e4]}),
         "DecisionTree": (mk(DecisionTreeRegressor(random_state=seed)),
                          {"reg__regressor__max_depth": [4, 8, 12] if quick else [3, 5, 8, 12, None], "reg__regressor__min_samples_leaf": [2, 5]}),
         "kNN": (mk(KNeighborsRegressor(weights="distance")), {"reg__regressor__n_neighbors": [3, 5, 9] if quick else [3, 5, 9, 15]}),
         "SVR": (mk(MultiOutputRegressor(SVR(kernel="rbf", epsilon=0.05)), True), {"reg__regressor__estimator__C": [1, 10] if quick else [1, 10, 100]}),
-        "MLP": (mk(MLPRegressor(hidden_layer_sizes=(128,), early_stopping=True, max_iter=300, random_state=seed), True),
+        "MLP": (mk(MLPRegressor(hidden_layer_sizes=(128,), early_stopping=n_train >= 100, max_iter=300, random_state=seed), True),
                 {"reg__regressor__alpha": [1e-3, 1e-1], "reg__regressor__hidden_layer_sizes": [(128,), (256, 128)]}),
     }
 

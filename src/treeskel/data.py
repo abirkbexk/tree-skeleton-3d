@@ -15,7 +15,7 @@ from .synthetic import write_synthetic_dataset
 
 
 _ROLE_TOKENS = {
-    "depth": {"depth", "depthmap", "dep"},
+    "depth": {"depth", "depthmap", "dep", "d"},
     "skeleton": {"skeleton", "skel", "gt", "label", "labels", "mask", "annotation", "annotations", "annot",
                  "whole", "position", "groundtruth", "truth", "seg"},
     "rgb": {"rgb", "color", "colour", "image", "img"},
@@ -89,7 +89,8 @@ def classify_png(path, root):
     variant = next((t for t in name_toks + sum(dir_toks, []) if t in _VARIANT_TOKENS), "")
     drop = all_role | _VARIANT_TOKENS
     key = "/".join("_".join(t for t in toks if t not in drop) for toks in dir_toks) + "|" + "_".join(t for t in name_toks if t not in drop)
-    season = next((s for s in _SEASONS if s in str(rel).lower()), "unknown")
+    # season: the FILENAME wins (a folder called "... Summer GT" also holds winter files), then folder names
+    season = next((s for s in _SEASONS if s in name_toks), None) or next((s for s in _SEASONS if any(s in t for toks in dir_toks for t in toks)), "unknown")
     return role, key, variant, season
 
 
@@ -166,8 +167,13 @@ def load_sample(rec, size, cfg, need_skeleton=True):
         if d.ndim == 3:
             d = d[..., 0]
         if d.dtype == np.uint8:
-            warnings.warn("8-bit depth PNG: metric scale is lost; treating 0..255 as 0..DEPTH_MAX_M")
-            depth = d.astype(np.float32) / 255.0 * cfg["DEPTH_MAX_M"]
+            # 8-bit depth: the real metric scale is NOT stored in the file. Assumed linear 0..255 <-> 0..DEPTH_MAX_M metres; DEPTH_8BIT_INVERTED=True means
+            # bright = NEAR (inferred for the Monash data: foliage is brighter than the wall behind it). 0 always means "no reading". Treat metres as approximate.
+            warnings.warn("8-bit depth PNG: metric scale is assumed (linear 0..255 -> 0..DEPTH_MAX_M, inverted=%s); 3D lengths in metres are approximate"
+                          % cfg.get("DEPTH_8BIT_INVERTED", True))
+            v8 = d.astype(np.float32)
+            depth = cfg["DEPTH_MAX_M"] * ((1.0 - v8 / 255.0) if cfg.get("DEPTH_8BIT_INVERTED", True) else v8 / 255.0)
+            depth[v8 == 0] = np.nan
         else:
             depth = d.astype(np.float32) * cfg["DEPTH_SCALE_M"]
     elif depth is not None:
@@ -188,7 +194,14 @@ def load_sample(rec, size, cfg, need_skeleton=True):
         if m.mean() > 0.5:                      # black line on white background -> invert
             m = 1.0 - m
         if m.shape != (H, W):
-            m = cv2.resize(m, (W, H), interpolation=cv2.INTER_NEAREST)
+            if m.shape[0] == m.shape[1] and H != W:
+                # square annotation of a non-square image = the CENTRE SQUARE crop (Monash data: 256x256 GT for 480x640 RGB): put it back where it came from
+                side_ = min(H, W); full = np.zeros((H, W), np.float32)
+                y0_, x0_ = (H - side_) // 2, (W - side_) // 2
+                full[y0_:y0_ + side_, x0_:x0_ + side_] = cv2.resize(m, (side_, side_), interpolation=cv2.INTER_NEAREST)
+                m = full
+            else:
+                m = cv2.resize(m, (W, H), interpolation=cv2.INTER_NEAREST)
         mask = m
     rgb, side = _center_square(rgb)
     out = dict(rgb=cv2.resize(rgb, (size, size), interpolation=cv2.INTER_AREA), scale=size / side)

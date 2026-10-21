@@ -21,7 +21,8 @@ DEFAULT_CONFIG: dict = dict(
     # ---- sensor (Intel RealSense D435, 640x480 colour; replace with calibrated values if available) ----
     FX=615.0, FY=615.0,
     DEPTH_SCALE_M=0.001,          # uint16 depth PNG in millimetres -> metres
-    DEPTH_MAX_M=4.0,              # readings beyond this (or == 0) are treated as missing
+    DEPTH_MAX_M=4.0,              # readings beyond this (or == 0) are treated as missing; also the full-scale value of 8-bit depth PNGs
+    DEPTH_8BIT_INVERTED=True,     # 8-bit depth PNGs: True = bright is NEAR (inferred for the Monash data - CONFIRM with the dataset owner)
     # ---- representation / models -------------------------------------------------------------
     IMG_SIZE=256,                 # square working resolution (= number of skeleton rows)
     FEAT_SIZE=32,                 # down-sampled size for classical-ML features
