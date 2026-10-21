@@ -7,9 +7,12 @@ dist/
 .pytest_cache/
 .coverage
 .ipynb_checkpoints/
-# data and run outputs (never commit raw data or trained binaries)
+# data and run outputs (never commit trained binaries or other raw data)
 data/*
 !data/README.md
+# ...except the labelled Monash TreeID training set that ships with this repo
+!data/TreeID/
+!data/TreeID/*.png
 outputs/
 *.joblib
 *.pt
