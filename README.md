@@ -32,17 +32,19 @@ pip install -e ".[dev]"                                 # add ,cnn for PyTorch
 Google Colab: open `notebooks/MMA3001_tree_skeleton_colab.ipynb` (installs the package from this repo; use a GPU runtime for the CNN).
 
 ## Data
-Raw data are **not** stored in git (size/licence). See [`data/README.md`](data/README.md). Dataset: Monash *Y-shaped Tree Dataset for Tree Branch Prediction*
-(Chen et al., HOB-CNN). Choose a source with `--data-mode`: `gdown` (download), `local` (`--local-path` to a folder of PNGs), `drive`, or `synthetic`
-(generated trees – **only for testing the pipeline**, results on it say nothing about real accuracy).
+The labelled **Monash TreeID** Summer images (400 apple trees x RGB + depth + ground-truth skeleton = 1200 PNGs, ~250 MB) are **bundled in `data/TreeID/`**, so a clone is
+ready to train: the default `DATA_MODE="repo"` finds them automatically and groups files by tree (`GROUP_REGEX=(r\d+n\d+)`) so a tree never straddles train/val/test.
+See [`data/README.md`](data/README.md) for the file format and the depth-encoding assumption (8-bit, brighter = nearer, metric scale approximate).
+Other sources remain available via `--data-mode`: `local`, `gdown`, `drive`, or `synthetic` (generated trees - **only for testing the pipeline**).
 
 ## Usage
 ```bash
 # smoke test in ~1 minute, no data needed
 treeskel-train --data-mode synthetic --quick --no-cnn --out-dir outputs
 
-# real data
-treeskel-train --data-mode local --local-path /path/to/pngs --out-dir outputs      # writes outputs/skeleton_model.joblib + tables
+# real data (bundled data/TreeID, default)
+treeskel-train --out-dir outputs                                                    # writes outputs/skeleton_model.joblib + tables
+# your own folder: treeskel-train --data-mode local --local-path /path/to/pngs
 treeskel-predict tree_rgb.png --depth tree_depth.png --model outputs/skeleton_model.joblib --out-dir outputs/predictions
 
 # all report tables/figures

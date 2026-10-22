@@ -17,7 +17,7 @@ from treeskel import get_config, train_pipeline
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data-mode", default="synthetic"); ap.add_argument("--local-path"); ap.add_argument("--out-dir", default="outputs")
+    ap.add_argument("--data-mode", default="synthetic", help="repo | synthetic | local | gdown | drive"); ap.add_argument("--local-path"); ap.add_argument("--out-dir", default="outputs")
     ap.add_argument("--quick", action="store_true"); ap.add_argument("--no-cnn", action="store_true")
     a = ap.parse_args()
     cfg = get_config(DATA_MODE=a.data_mode, LOCAL_PATH=a.local_path, OUT_DIR=a.out_dir, QUICK_TEST=a.quick, RUN_CNN=not a.no_cnn)

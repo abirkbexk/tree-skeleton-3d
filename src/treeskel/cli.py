@@ -12,8 +12,8 @@ from .pipeline import extract_skeleton_3d, train_pipeline
 def train_main(argv=None):
     """Train + select a model and write ``skeleton_model.joblib`` and result tables to ``--out-dir``."""
     ap = argparse.ArgumentParser(description="Train the apple-tree skeleton model.")
-    ap.add_argument("--data-mode", default="gdown", choices=["gdown", "drive", "local", "synthetic", "upload"])
-    ap.add_argument("--local-path", help="folder of PNGs (with --data-mode local)")
+    ap.add_argument("--data-mode", default="repo", choices=["repo", "gdown", "drive", "local", "synthetic", "upload"])
+    ap.add_argument("--local-path", help="folder of PNGs (with --data-mode local); default mode 'repo' uses the bundled data/TreeID")
     ap.add_argument("--data-dir", default="data"); ap.add_argument("--out-dir", default="outputs")
     ap.add_argument("--quick", action="store_true", help="tiny/fast settings for a smoke test")
     ap.add_argument("--no-cnn", action="store_true", help="skip the PyTorch CNN")

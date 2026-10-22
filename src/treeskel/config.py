@@ -5,9 +5,12 @@ Use :func:`get_config` instead of editing :data:`DEFAULT_CONFIG` in place.
 """
 from __future__ import annotations
 
+REPO_DATA_SUBDIR = "data/TreeID"          # labelled Monash TreeID Summer images bundled in this repository
+REPO_GROUP_REGEX = r"(r\d+n\d+)"          # R{row}N{tree} -> one id per physical tree, so RGB/D/GT of a tree never straddle a split
+
 DEFAULT_CONFIG: dict = dict(
     # ---- data --------------------------------------------------------------------------------
-    DATA_MODE="gdown",            # 'gdown' | 'drive' | 'upload' | 'local' | 'synthetic'
+    DATA_MODE="repo",             # 'repo' (bundled data/TreeID) | 'gdown' | 'drive' | 'upload' | 'local' | 'synthetic'
     GDRIVE_FILE_ID="1-6akVXezq26ihtDrVH9czGUQDFd8Py81",   # Monash Y-shaped tree dataset - CHECK this is your Dataset 1 link
     DRIVE_PATH="/content/drive/MyDrive/MMA3001/dataset1",  # used when DATA_MODE == 'drive'
     LOCAL_PATH=None,              # used when DATA_MODE == 'local': folder that already contains the PNGs
@@ -15,7 +18,7 @@ DEFAULT_CONFIG: dict = dict(
     OUT_DIR="outputs",            # models, tables, exports (git-ignored)
     SKELETON_VARIANT=None,        # e.g. 'whole' / 'visible' if several annotation PNGs exist per image
     FOURTH_CHANNEL_IS_DEPTH=False,  # True if depth is packed into the alpha channel of the RGB PNG
-    GROUP_REGEX=None,             # regex with 1 group extracting a tree id from the file key (prevents train/test leakage)
+    GROUP_REGEX=None,             # None -> r"(r\d+n\d+)" in repo mode (see REPO_GROUP_REGEX). Regex with 1 group extracting a tree id from the file key (prevents train/test leakage)
     MAX_IMAGES=None,              # cap number of samples (None = all)
     N_SYNTH=240,                  # number of synthetic trees when DATA_MODE == 'synthetic'
     # ---- sensor (Intel RealSense D435, 640x480 colour; replace with calibrated values if available) ----
@@ -53,4 +56,6 @@ def get_config(**overrides) -> dict:
     if overrides.get("QUICK_TEST", cfg["QUICK_TEST"]):
         cfg.update(_QUICK_OVERRIDES)
     cfg.update(overrides)
+    if cfg["DATA_MODE"] == "repo" and cfg["GROUP_REGEX"] is None:
+        cfg["GROUP_REGEX"] = REPO_GROUP_REGEX
     return cfg

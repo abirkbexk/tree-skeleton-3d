@@ -28,11 +28,27 @@ _VARIANT_TOKENS = {"visible", "whole", "position"}
 _SEASONS = ("summer", "autumn", "winter")
 
 
+def repo_data_path() -> Path:
+    """Locate the TreeID images bundled with the repository (``data/TreeID``).
+
+    Looks next to the source tree first (clone / editable install), then in the current directory.
+    Raises ``FileNotFoundError`` with a helpful message if the folder is absent (e.g. a plain ``pip install``).
+    """
+    from .config import REPO_DATA_SUBDIR
+    for base in (Path(__file__).resolve().parents[2], Path.cwd()):
+        p = base / REPO_DATA_SUBDIR
+        if p.is_dir() and any(p.glob("*.png")):
+            return p
+    raise FileNotFoundError(f"Bundled data '{REPO_DATA_SUBDIR}' not found - run from a clone of the repository, or use --data-mode local/gdown/synthetic.")
+
+
 def acquire_data(cfg):
-    """Return a folder containing the PNG dataset according to cfg['DATA_MODE'] (synthetic | local | drive | gdown | upload)."""
+    """Return a folder containing the PNG dataset according to cfg['DATA_MODE'] (repo | synthetic | local | drive | gdown | upload)."""
     mode, root = cfg["DATA_MODE"], Path(cfg["DATA_DIR"]); root.mkdir(parents=True, exist_ok=True)
     if mode == "synthetic":
         return write_synthetic_dataset(root / "synthetic", cfg["N_SYNTH"], cfg["SEED"])
+    if mode == "repo":
+        return repo_data_path()
     if mode == "local":
         if not cfg.get("LOCAL_PATH") or not Path(cfg["LOCAL_PATH"]).is_dir():
             raise FileNotFoundError(f"DATA_MODE='local' needs LOCAL_PATH to be an existing folder, got {cfg.get('LOCAL_PATH')!r}")
