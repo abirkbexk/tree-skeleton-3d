@@ -102,7 +102,7 @@ Committed outputs: [`docs/test_report.html`](docs/test_report.html) and [`docs/a
 * The CNN could not be exercised in the automated test environment used to write this repo (no PyTorch there); `tests/test_cnn.py` runs wherever PyTorch is installed.
 
 ## AI use
-See [`AI_USE.md`](AI_USE.md) – required disclosure and reflection for the unit.
+The required AI-use disclosure and reflection is Section 7 of the written project documentation ([`docs/report/MMA3001_Written_Project_Documentation.docx`](docs/report/MMA3001_Written_Project_Documentation.docx)).
 
 ## Licence and references
 MIT (see `LICENSE`). Dataset licence: check the dataset page before redistributing any data.
