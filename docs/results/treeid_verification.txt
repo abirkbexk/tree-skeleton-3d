@@ -1,0 +1,4 @@
+finite-difference observed order: {'forward': np.float64(0.9958669961772784), 'central': np.float64(1.997522733108437)}
+ODE solver observed order: {'euler': np.float64(0.9426637908111563), 'heun': np.float64(2.1191307472425778), 'rk4': np.float64(4.108862395309058)}
+conditioning: cond(A)=1.008e+02
+relative errors vs float64 SVD: {'float64 normal equations': 1.6671442013220273e-13, 'float32 SVD': 6.906238991055971e-07, 'float32 normal equations': 6.685952329074891e-05}
