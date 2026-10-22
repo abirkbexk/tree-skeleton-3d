@@ -67,6 +67,22 @@ res["length_m"], res["points_3d"]["left"]      # metres, camera frame (X right, 
 Invalid input: missing file → `FileNotFoundError`; non-PNG → `ValueError`; unreadable/empty annotation → sample skipped and reported during training;
 missing/mostly-empty depth → 2D result only, with a warning.
 
+## Results on the bundled TreeID data
+Tree-grouped split (279 train / 61 val / 60 test trees), no CNN; error is skeleton x-position RMSE in pixels of the 256 px working image.
+Full tables: [`docs/results/`](docs/results/).
+
+| Model | Val RMSE | Test RMSE | Chamfer | Predict ms/img |
+|---|---|---|---|---|
+| SVR | 13.54 | 13.58 | 10.05 | 0.67 |
+| Ridge (selected on validation) | 13.35 | 14.15 | 10.53 | 0.07 |
+| kNN | 14.60 | 14.65 | 10.91 | 0.11 |
+| Decision tree | 15.71 | 14.76 | 10.96 | 0.06 |
+| Mean-skeleton baseline | 15.76 | 16.04 | 12.23 | 0.01 |
+| MLP | 18.47 | 18.07 | 13.12 | 0.06 |
+
+The learned models improve only modestly (about 2 px) on the mean-skeleton baseline, and post-processing (polynomial / smoothing spline) gave no gain over raw predictions on validation data.
+Reproduce with `treeskel-train --no-cnn --out-dir outputs`.
+
 ## Reproducibility
 Fixed seeds (`SEED`), a single configuration dict (`treeskel/config.py`), model selection on validation data only, test set scored once for the final table.
 Set `GROUP_REGEX` so that images of the same tree stay in the same split – otherwise a random image split can leak near-duplicate frames and inflate accuracy.
